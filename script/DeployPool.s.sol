@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.20;
+pragma solidity >=0.8.19;
 
 import "forge-std/Script.sol";
 import { BaseScript } from "./Base.s.sol";
 import {IPoolManager} from "@uniswap/v4-core/contracts/interfaces/IPoolManager.sol";
 import {IHooks} from "@uniswap/v4-core/contracts/interfaces/IHooks.sol";
 import {PoolManager} from "@uniswap/v4-core/contracts/PoolManager.sol";
-import {PoolManagerTester} from "../src/PoolManagerTester.sol";
 import {Currency, CurrencyLibrary} from "@uniswap/v4-core/contracts/types/Currency.sol";
 import {PoolKey} from "@uniswap/v4-core/contracts/types/PoolKey.sol";
 import {MockERC20} from "@uniswap/v4-core/test/foundry-tests/utils/MockERC20.sol";
 import {UniswapHooks} from "../src/UniswapHooks.sol";
 import {Hooks} from "@uniswap/v4-core/contracts/libraries/Hooks.sol";
-import {HookDeployer} from "../test/utils/HookDeployer.sol";
 
 
 contract DeployPoolScript is BaseScript {
@@ -57,7 +55,9 @@ contract DeployPoolScript is BaseScript {
         // LensAuthHook lensAuthHook = new LensAuthHook(poolManager, lensHubAddress);
         
         uint160 flags = uint160(
-            Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_INITIALIZE_FLAG
+            Hooks.BEFORE_SWAP_FLAG | Hooks.AFTER_SWAP_FLAG | Hooks.BEFORE_MODIFY_POSITION_FLAG
+            | Hooks.AFTER_MODIFY_POSITION_FLAG | Hooks.BEFORE_INITIALIZE_FLAG | Hooks.AFTER_INITIALIZE_FLAG |
+            Hooks.BEFORE_DONATE_FLAG | Hooks.AFTER_DONATE_FLAG
         );
         bytes memory hookBytecode = abi.encodePacked(type(UniswapHooks).creationCode, 
                                     abi.encode(address(poolManager),
@@ -86,6 +86,8 @@ contract DeployPoolScript is BaseScript {
         PoolManagerTester tester = new PoolManagerTester(address(poolManager), keyToAdd);
         tokenA.approve(address(tester), 100 ether);
         tokenB.approve(address(tester), 100 ether);
+
+        
 
         // // modifyPosition
         // tester.runMP(73781, 74959, 1 ether); // 1600 1800
